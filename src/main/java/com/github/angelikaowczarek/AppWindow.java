@@ -19,6 +19,9 @@ import java.awt.*;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.Date;
+import java.util.Locale;
 
 public class AppWindow extends JFrame {
 
@@ -41,7 +44,10 @@ public class AppWindow extends JFrame {
         setResizable(false);
         setVisible(true);
 
-        connector.connect("2016-03-05");
+        LocalDate today = LocalDate.now();
+        System.out.println(today);
+
+        connector.connect(today);
 
         XYDataset ds = createDataset();
         JFreeChart chart = ChartFactory.createXYLineChart("PLN/EUR",

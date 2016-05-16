@@ -1,51 +1,38 @@
 package com.github.angelikaowczarek;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
+import java.time.LocalDate;
 
 public class Connector {
     private HttpURLConnection connection;
-    private String output;
     private URL url;
+    private JsonFile jsonFile;
     private double rate;
 
-    public void connect(String date) throws IOException {
-        url = new URL("http://api.fixer.io/" + date + "?symbols=EUR,PLN");
+    public void connect(LocalDate date) throws IOException {
+        url = new URL("http://api.fixer.io/" + date.toString() + "?symbols=EUR,PLN");
 
         createConnection();
         connection.connect();
 
         throwExceptionIfFailed();
-        printOutputIfSuccess();
 
-//        JSONObject actionsObject = createActionsObject();
-//        findActions(actionsObject);
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        String json = bufferedReader.readLine();
+        System.out.println(json);
+        jsonFile = new ObjectMapper().readValue(json.getBytes(), JsonFile.class);
+        rate = jsonFile.getRates().PLN;
+//        System.out.println(jsonFile.getRates().getPLN());
+
 
         connection.disconnect();
-    }
-
-//    private JSONObject createActionsObject() throws IOException {
-//        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-//        String actionsLine = bufferedReader.readLine();
-//        return new JSONObject(actionsLine);
-//    }
-
-    private void printOutputIfSuccess() throws IOException {
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
-                (connection.getInputStream())));
-
-        String output;
-        System.out.println("Output from server... \n");
-        while ((output = bufferedReader.readLine()) != null) {
-            System.out.println(output);
-        }
     }
 
     private void throwExceptionIfFailed() throws IOException {
@@ -63,33 +50,4 @@ public class Connector {
         connection.setRequestMethod("GET");
     }
 
-    public double getRate() {
-        return rate;
-    }
-
-    //    private void findActions(JSONObject obj) {
-//        JSONArray actions = obj.getJSONArray("actions");
-//        boolean isAnyActionFound = false;
-//        JSONObject action;
-//        JSONArray devicesArray;
-//
-//        for (int i = 0; i < actions.length(); i++) {
-//
-//            action = actions.getJSONObject(i);
-//            devicesArray = action.getJSONArray("deviceUniqueIds");
-//
-//            for (int j = 0; j < devicesArray.length(); j++) {
-//
-//                if (devicesArray.getString(j).equals(uniqueId)) {
-//                    isAnyActionFound = true;
-//                    printAction(action);
-//                    break;
-//                }
-//            }
-//        }
-//        if (!isAnyActionFound) {
-//            System.out.println("No actions assigned to this device found");
-//            System.exit(1);
-//        }
-//    }
 }

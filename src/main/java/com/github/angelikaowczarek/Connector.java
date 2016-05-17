@@ -29,10 +29,13 @@ public class Connector {
         System.out.println(json);
         jsonFile = new ObjectMapper().readValue(json.getBytes(), JsonFile.class);
         rate = jsonFile.getRates().PLN;
-//        System.out.println(jsonFile.getRates().getPLN());
-
+        System.out.println(jsonFile.getRates().PLN);
 
         connection.disconnect();
+    }
+
+    public double getRate() {
+        return rate;
     }
 
     private void throwExceptionIfFailed() throws IOException {

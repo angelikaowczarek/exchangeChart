@@ -12,14 +12,13 @@ import org.jfree.data.time.TimeSeriesCollection;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
-
-import javax.swing.*;
 import java.util.List;
-import java.util.Random;
 
 public class Worker extends SwingWorker<Void, Double> {
     private DataListener dataListener;
@@ -28,14 +27,34 @@ public class Worker extends SwingWorker<Void, Double> {
     private double min = 10, max = 0;
     private LocalDate start, end;
     private TimeSeries series;
+    private String dateStart, dateStop;
 
     public Worker(JPanel jPanel) throws IOException {
         this.jPanel = jPanel;
-        connectAndDraw();
+        initiate();
+    }
+
+    public void setDates(String dateStart, String dateStop) {
+        this.dateStart = dateStart;
+        this.dateStop = dateStop;
+        Calendar startDate = Calendar.getInstance();
+        Calendar endDate = Calendar.getInstance();
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.GERMANY);
+        try {
+            startDate.setTime(sdf.parse(dateStart));
+            endDate.setTime(sdf.parse(dateStop));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        start = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        end = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 
     @Override
     protected Void doInBackground() throws Exception {
+
         for (LocalDate localDate = start; !localDate.isEqual(end.plusDays(1)); localDate = localDate.plusDays(1)) {
             connector.connect(localDate);
             Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
@@ -46,18 +65,11 @@ public class Worker extends SwingWorker<Void, Double> {
                 max = connector.getRate();
             jPanel.repaint();
         }
-//        publish(fp);
         return null;
     }
 
     @Override
     protected void process (List<Double> chunks) {
-        for(Double rate : chunks){
-            if(dataListener != null){
-                this.dataListener.onData(new
-                        DataEvent(this, rate));
-            }
-        }
     }
 
     @Override
@@ -65,6 +77,11 @@ public class Worker extends SwingWorker<Void, Double> {
         super.done();
         System.out.println("Min: " + min);
         System.out.println("Max: " + max);
+
+    }
+
+    public String getMinMax() {
+        return new String("Min: " + min + "\tMax: " + max);
     }
 
 
@@ -72,16 +89,7 @@ public class Worker extends SwingWorker<Void, Double> {
         this.dataListener = dataListener;
     }
 
-    private void connectAndDraw() throws IOException {
-        Calendar startDate = Calendar.getInstance();
-        startDate.set(2015, Calendar.NOVEMBER, 1);
-        Calendar endDate = Calendar.getInstance();
-        endDate.set(2016, Calendar.JANUARY,10 );
-        start =
-                startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        end =
-                endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
+    private void initiate() throws IOException {
         series = new TimeSeries("PLN/EUR");
         TimeSeriesCollection dataset =  new TimeSeriesCollection();
         dataset.addSeries(series);
@@ -92,12 +100,6 @@ public class Worker extends SwingWorker<Void, Double> {
         xAxis.setVerticalTickLabels(true);
         xAxis.setDateFormatOverride(new SimpleDateFormat("dd-MM-yyy"));
         ValueAxis yAxis = chart.getXYPlot().getRangeAxis();
-
-//        UtilDateModel model = new UtilDateModel();
-//        JDatePanelImpl datePanel = new JDatePanelImpl(model);
-//        JDatePickerImpl datePicker = new JDatePickerImpl(datePanel);
-//        datePicker.setBounds(220,350,120,30);
-//        dateFromPanel.add(datePicker);
 
         ChartPanel cp = new ChartPanel(chart);
         jPanel.setLayout(new BorderLayout());

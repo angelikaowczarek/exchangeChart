@@ -26,10 +26,8 @@ public class Connector {
 
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
         String json = bufferedReader.readLine();
-        System.out.println(json);
         jsonFile = new ObjectMapper().readValue(json.getBytes(), JsonFile.class);
         rate = jsonFile.getRates().PLN;
-        System.out.println(jsonFile.getRates().PLN);
 
         connection.disconnect();
     }
